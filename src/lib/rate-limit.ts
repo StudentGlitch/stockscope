@@ -68,7 +68,7 @@ export async function checkRateLimit(
     }
 
     // Allow request and add to window
-    const requestId = `${now}-${crypto.randomUUID()}`;
+    const requestId = `${now}-${Math.random().toString(36).substr(2, 9)}`;
     await redisClient.zadd(rateLimitKey, now, requestId);
 
     // Set expiration on the key (cleanup)
