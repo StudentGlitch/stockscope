@@ -114,46 +114,6 @@ export async function GET(req: NextRequest) {
 }
 
 // =============================================================================
-// HELPER: Recalculate average response times (if needed)
-// =============================================================================
-
-/**
- * Recalculate accurate average response times
- * This is needed because incremental averaging can drift
- * 
- * Called periodically (e.g., daily) to fix drift
- */
-async function recalculateAverages(hour: Date): Promise<void> {
-  // In our current implementation, avgResponseTime is maintained via upsert
-  // If we were storing raw request logs, we'd recalculate here:
-  
-  // const rawLogs = await prisma.apiRequestLog.groupBy({
-  //   by: ['apiKeyId', 'endpoint', 'method'],
-  //   where: { timestamp: { gte: hour, lt: nextHour } },
-  //   _avg: { responseTime: true },
-  //   _count: { id: true },
-  // });
-  
-  // for (const log of rawLogs) {
-  //   await prisma.apiUsageHourly.update({
-  //     where: {
-  //       hour_apiKeyId_endpoint_method: {
-  //         hour,
-  //         apiKeyId: log.apiKeyId,
-  //         endpoint: log.endpoint,
-  //         method: log.method,
-  //       },
-  //     },
-  //     data: {
-  //       avgResponseTime: log._avg.responseTime || 0,
-  //     },
-  //   });
-  // }
-  
-  // For now, this is a placeholder. Accurate averaging handled in middleware.
-}
-
-// =============================================================================
 // CLEANUP: Delete old usage data (retention policy)
 // =============================================================================
 
