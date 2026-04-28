@@ -114,6 +114,21 @@ export async function GET(req: NextRequest) {
 }
 
 // =============================================================================
+// HELPER: Recalculate average response times (if needed)
+// =============================================================================
+
+/**
+ * Recalculate accurate average response times
+ * This is needed because incremental averaging can drift
+ *
+ * Called periodically (e.g., daily) to fix drift
+ */
+async function recalculateAverages(_hour: Date): Promise<void> {
+  // TODO: Implement drift correction if raw request logs are ever stored.
+  // Currently, accurate averaging is handled in real-time via middleware upserts.
+}
+
+// =============================================================================
 // CLEANUP: Delete old usage data (retention policy)
 // =============================================================================
 
