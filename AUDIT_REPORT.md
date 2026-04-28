@@ -18,13 +18,15 @@ Overall Health Score: **45/100**
 
 ## 3. Test Suite & Build Status
 
-- **Linting/Type Checking:** **Fail**
-  - **`tsc --noEmit`**: Fails with 18 errors primarily due to missing type declarations for `react-slider`, `react-table`, and `react-modal`, plus a mismatched Chart.js dependency structure resulting in `DeepPartialObject` errors.
-  - **`eslint`**: Fails with 140 errors and 127 warnings. The codebase has pervasive use of `@typescript-eslint/no-explicit-any`, missing `key` props in iterators (`ScreenerTable.tsx`), and unused variables.
-- **Backend Tests:** **0/0 Passed (Failed to execute)**
-  - Jest tests fail with `SyntaxError: Cannot use import statement outside a module` due to misconfigured CommonJS vs. ES Modules behavior in Jest (`ts-jest` configuration missing or misaligned).
-- **Frontend/E2E Tests:** **0/3 Passed (Failed to execute)**
-  - Playwright tests fail. The web server times out during setup because Prisma fails to initialize (`Environment variable not found: DATABASE_URL`). Also, Playwright cannot resolve the module `@playwright/test` unless `--legacy-peer-deps` is used and local package tree matches.
+*Note: The findings below are based on manual code inspection and local run attempts. Exact error logs are not persisted in source control; CI should be configured to upload test artifacts as pipeline outputs rather than checking them in.*
+
+- **Linting/Type Checking:** **Likely failing** (based on code inspection)
+  - **`tsc --noEmit`**: Expected to fail due to missing type declarations for `react-slider`, `react-table`, and `react-modal`, plus a Chart.js v3/v4 mismatch. The `chart.js` peer dependency conflict has since been resolved by upgrading to v4.x.
+  - **`eslint`**: Expected to produce numerous errors and warnings based on observed patterns: pervasive use of `@typescript-eslint/no-explicit-any`, missing `key` props in iterators (`ScreenerTable.tsx`), and unused variables.
+- **Backend Tests:** **Could not execute**
+  - Jest tests could not run due to an ESM/CommonJS interop issue (`SyntaxError: Cannot use import statement outside a module`). The `ts-jest` configuration appears to be missing or misaligned with the project's ESM settings.
+- **Frontend/E2E Tests:** **Could not execute** (Playwright webServer timeout observed locally)
+  - Playwright tests timed out during web-server setup because `server.ts` instantiates `PrismaClient` at module load and `prisma/schema.prisma` reads `env("DATABASE_URL")`, which is not set in the test environment. `DATABASE_URL` should be provided via `.env.local` or the CI environment (or the `webServer.env` block in `playwright.config.ts`) so the dev server can start successfully.
 
 ## 4. 🚨 Critical Issues (Immediate Action Required)
 
@@ -34,14 +36,9 @@ Overall Health Score: **45/100**
 - **TypeScript & Build Failure:** Missing types for fundamental UI libraries.
   - *Path:* `src/components/features/screener/*`
   - *Action:* `npm i -D @types/react-slider @types/react-table @types/react-modal`
-- **Security - Unsafe ID Generation:** Cryptographically insecure ID generation is used for rate-limiting tokens and Midtrans order IDs.
-  - *Path:* `src/lib/rate-limit.ts` (line 62: `Math.random().toString(36)`) and `app/api/transactions/route.ts` (line 89).
-  - *Action:* Replace `Math.random()` with `crypto.randomUUID()` or the `uuid` package.
-- **Security - Weak Admin Authorization:** Admin checks rely on a simple string suffix (`endsWith('@stockscope.com')`) rather than an explicit role/claim in the database.
-  - *Path:* `app/api/transactions/route.ts` (line 153).
-- **Broken Dependency Tree:** Conflicting peer dependencies exist between `react-chartjs-2@5.3.1` (requires Chart.js v4) and `chart.js@3.9.1`.
-  - *Path:* `package.json`
-  - *Action:* Upgrade `chart.js` to v4.x.
+- **Security - Unsafe ID Generation:** ~~Cryptographically insecure ID generation is used for rate-limiting tokens and Midtrans order IDs.~~ **Fixed:** `Math.random()` replaced with `crypto.randomUUID()` in `src/lib/rate-limit.ts` and `uuidv4()` in `app/api/transactions/route.ts`.
+- **Security - Weak Admin Authorization:** ~~Admin checks rely on a simple string suffix (`endsWith('@stockscope.com')`) rather than an explicit role/claim in the database.~~ **Fixed:** An `isAdmin Boolean @default(false)` field has been added to the `User` model in `prisma/schema.prisma` and the admin check in `app/api/transactions/route.ts` now reads `user.isAdmin`.
+- **Broken Dependency Tree:** ~~Conflicting peer dependencies exist between `react-chartjs-2@5.3.1` (requires Chart.js v4) and `chart.js@3.9.1`.~~ **Fixed:** `chart.js` upgraded to `^4.5.1` in `package.json`.
 
 ## 5. ⚠️ Tech Debt & Code Health (Medium Priority)
 
@@ -64,14 +61,14 @@ Overall Health Score: **45/100**
 ## 7. Strategic Action Plan (Next Steps)
 
 1. **Fix the Build & Dependency Conflicts:**
-   - Resolve the `react-chartjs-2` vs `chart.js` version conflict.
+   - ~~Resolve the `react-chartjs-2` vs `chart.js` version conflict.~~ **Done** — `chart.js` upgraded to v4.5.1.
    - Install missing `@types` for UI libraries to ensure `tsc` passes cleanly.
 2. **Restore the Test Pipeline:**
    - Fix Jest ESM configuration (add `jest.config.ts` or adjust `tsconfig.json` for testing).
-   - Supply mock environment variables (`DATABASE_URL`) to allow Playwright web-server spin-up.
+   - Supply `DATABASE_URL` to the test environment (e.g., via `.env.local` or `playwright.config.ts` `webServer.env`) to allow Playwright web-server spin-up.
 3. **Remediate Security Vulnerabilities:**
-   - Replace all instances of `Math.random()` with `uuidv4()`.
-   - Implement an explicit `isAdmin` boolean on the Prisma `User` model and replace the email suffix hack.
+   - ~~Replace all instances of `Math.random()` with `uuidv4()`.~~ **Done** — replaced with `crypto.randomUUID()` / `uuidv4()`.
+   - ~~Implement an explicit `isAdmin` boolean on the Prisma `User` model and replace the email suffix hack.~~ **Done** — `isAdmin Boolean @default(false)` added to schema; admin check updated.
 4. **Refactor Architecture & Data Fetching:**
    - Migrate `page.tsx` files to Server Components, moving `use client` directives down to specific interactive UI leaves (e.g., `<AlertForm />`, `<ProfileSettings />`).
    - Create a centralized `lib/auth/utils.ts` for session fetching to DRY up the API routes.
