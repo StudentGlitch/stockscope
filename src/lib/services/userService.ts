@@ -14,6 +14,14 @@ export async function getUserPlan(userId: string): Promise<Plan> {
 }
 
 /**
+ * Check if user is an admin
+ */
+export async function isUserAdmin(userId: string): Promise<boolean> {
+  const user = await userQueries.findById(userId);
+  return !!user?.isAdmin;
+}
+
+/**
  * Upgrade user's plan to premium after successful payment.
  */
 export async function upgradePlan(userId: string): Promise<void> {

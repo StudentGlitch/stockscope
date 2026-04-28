@@ -204,12 +204,17 @@ export const ownerQueries = {
  * Database queries for users (plan storage)
  */
 export const userQueries = {
-  async findById(id: string): Promise<{ plan: Plan } | null> {
+  async findById(id: string): Promise<{ plan: Plan; isAdmin?: boolean } | null> {
     const database = await getDB();
     const user = await database
       .collection("users")
-      .findOne({ userId: id }, { projection: { plan: 1 } });
-    return user ? { plan: (user.plan as Plan) ?? "free" } : null;
+      .findOne({ userId: id }, { projection: { plan: 1, isAdmin: 1 } });
+    return user
+      ? {
+          plan: (user.plan as Plan) ?? "free",
+          isAdmin: !!user.isAdmin,
+        }
+      : null;
   },
 
   async upsertUser(

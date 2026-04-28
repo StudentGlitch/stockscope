@@ -199,8 +199,7 @@ export async function GET(req: NextRequest) {
 
     // Authorization check
     // Regular users can only see their own transactions
-    // Admin users (TODO: add isAdmin field) can see all transactions
-    const isAdmin = user.email.endsWith('@stockscope.com'); // Temporary admin check
+    const isAdmin = !!(session.user as any).isAdmin;
     const targetUserId = isAdmin && queryUserId ? queryUserId : user.id;
 
     // Build query filter

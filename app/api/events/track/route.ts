@@ -8,7 +8,31 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth/config'
 import { prisma } from '@/lib/prisma'
+
+// =============================================================================
+// ADMIN AUTHORIZATION
+// =============================================================================
+
+async function requireAdmin(req: NextRequest) {
+  const session = (await getServerSession(authOptions)) as {
+    user?: { email?: string; isAdmin?: boolean };
+  } | null;
+
+  if (!session?.user?.email) {
+    return { authorized: false, error: "Unauthorized", status: 401 };
+  }
+
+  const admin = !!session.user.isAdmin;
+
+  if (!admin) {
+    return { authorized: false, error: 'Forbidden: Admin access required', status: 403 }
+  }
+
+  return { authorized: true, email: session.user.email }
+}
 
 // Event Taxonomy V1 - Allowed event names
 const VALID_EVENT_NAMES = [
@@ -307,9 +331,12 @@ export async function PUT(request: NextRequest) {
  *   - limit: Max records (default: 100, max: 1000)
  */
 export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request)
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
   try {
-    // Admin-only endpoint (basic auth check)
-    // TODO: Add proper admin authentication
     const { searchParams } = new URL(request.url)
     
     const eventName = searchParams.get('eventName')

@@ -6,7 +6,8 @@ import type { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 
 import type { Plan } from "@/lib/auth/types";
-import { ensureUser, getUserPlan } from "@/lib/services/userService";
+import { userQueries } from "@/lib/mongodb";
+import { ensureUser } from "@/lib/services/userService";
 
 /**
  * Utility: authOptions
@@ -38,14 +39,14 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user && token.sub) {
-        (session.user as { id?: string; plan?: Plan }).id = token.sub;
-        // Fetch plan from DB on every session read so it refreshes after payment
-        // const devPremium =
-        //   process.env.NODE_ENV === 'development' &&
-        //   process.env.PREMIUM_DEV_OVERRIDE === 'true';
-        // const plan: Plan = devPremium ? 'premium' : await getUserPlan(token.sub);
-        const plan: Plan = await getUserPlan(token.sub);
-        (session.user as { id?: string; plan?: Plan }).plan = plan;
+        const userWithPlan = await userQueries.findById(token.sub);
+        (session.user as { id?: string; plan?: Plan; isAdmin?: boolean }).id =
+          token.sub;
+        (session.user as { id?: string; plan?: Plan; isAdmin?: boolean }).plan =
+          userWithPlan?.plan ?? "free";
+        (
+          session.user as { id?: string; plan?: Plan; isAdmin?: boolean }
+        ).isAdmin = !!userWithPlan?.isAdmin;
       }
       return session;
     },

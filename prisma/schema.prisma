@@ -22,6 +22,7 @@ model User {
   name          String?
   image         String?
   plan          String    @default("free")
+  isAdmin       Boolean   @default(false)
   
   // Subscription management (Sprint 7)
   cancelledAt       DateTime?

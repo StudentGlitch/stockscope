@@ -11,20 +11,16 @@ import prisma from '@/lib/prisma';
 // ADMIN AUTHORIZATION
 // =============================================================================
 
-async function isAdmin(email: string): Promise<boolean> {
-  // TODO: Add isAdmin field to User model
-  // For now, check email domain
-  return email.endsWith('@stockscope.com');
-}
-
 async function requireAdmin(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  
+  const session = (await getServerSession(authOptions)) as {
+    user?: { email?: string; isAdmin?: boolean };
+  } | null;
+
   if (!session?.user?.email) {
-    return { authorized: false, error: 'Unauthorized', status: 401 };
+    return { authorized: false, error: "Unauthorized", status: 401 };
   }
 
-  const admin = await isAdmin(session.user.email);
+  const admin = !!session.user.isAdmin;
   
   if (!admin) {
     return { authorized: false, error: 'Forbidden: Admin access required', status: 403 };
