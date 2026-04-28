@@ -8,7 +8,35 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth/config'
 import { prisma } from '@/lib/prisma'
+
+// =============================================================================
+// ADMIN AUTHORIZATION
+// =============================================================================
+
+async function isAdmin(email: string): Promise<boolean> {
+  // TODO: Add isAdmin field to User model
+  // For now, check email domain
+  return email.endsWith('@stockscope.com')
+}
+
+async function requireAdmin(req: NextRequest) {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user?.email) {
+    return { authorized: false, error: 'Unauthorized', status: 401 }
+  }
+
+  const admin = await isAdmin(session.user.email)
+
+  if (!admin) {
+    return { authorized: false, error: 'Forbidden: Admin access required', status: 403 }
+  }
+
+  return { authorized: true, email: session.user.email }
+}
 
 // Event Taxonomy V1 - Allowed event names
 const VALID_EVENT_NAMES = [
@@ -307,9 +335,12 @@ export async function PUT(request: NextRequest) {
  *   - limit: Max records (default: 100, max: 1000)
  */
 export async function GET(request: NextRequest) {
+  const auth = await requireAdmin(request)
+  if (!auth.authorized) {
+    return NextResponse.json({ error: auth.error }, { status: auth.status })
+  }
+
   try {
-    // Admin-only endpoint (basic auth check)
-    // TODO: Add proper admin authentication
     const { searchParams } = new URL(request.url)
     
     const eventName = searchParams.get('eventName')
