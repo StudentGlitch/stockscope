@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { calculateRSI, calculateMACD, calculateFundamentals } from '@/services/analysis';
+import { calculateRSI, calculateMACD, calculateFundamentals } from '@/lib/services/analysis';
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/lib/auth';
+import { authOptions } from '@/lib/auth/config';
 
 export async function GET(
   request: Request,
