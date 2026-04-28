@@ -106,7 +106,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate unique order ID for Midtrans
-    const orderId = `ORDER-${user.id.slice(-8)}-${Date.now()}-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+    const orderId = `ORDER-${user.id.slice(-8)}-${Date.now()}-${uuidv4().slice(0, 8).toUpperCase()}`;
 
     // Capture request context for audit trail
     const ipAddress = req.headers.get('x-forwarded-for') || 
@@ -197,10 +197,9 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    // Authorization check
-    // Regular users can only see their own transactions
-    // Admin users (TODO: add isAdmin field) can see all transactions
-    const isAdmin = user.email.endsWith('@stockscope.com'); // Temporary admin check
+    // Authorization check: regular users can only see their own transactions;
+    // admin users (isAdmin === true on the User model) can query any user's transactions.
+    const isAdmin = user.isAdmin === true;
     const targetUserId = isAdmin && queryUserId ? queryUserId : user.id;
 
     // Build query filter
