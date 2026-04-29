@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { GET } from "@/app/api/screen/route";
+import { GET } from "../../app/api/screen/route";
 
 // Very basic mock of getDB for Jest
 jest.mock("@/lib/mongodb", () => ({

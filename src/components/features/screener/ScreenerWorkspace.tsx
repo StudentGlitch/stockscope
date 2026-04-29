@@ -148,6 +148,10 @@ export function ScreenerWorkspace(): React.ReactElement {
         if (data.success) {
           // Transform API response shape to EnrichedStock shape expected by components
           const transformed = (data.data as any[]).map((s: any): EnrichedStock => ({
+            hhi: s.hhi,
+            floatPercentage: s.floatPercentage,
+            c1: s.c1,
+            c3: s.c3,
             code: s.code,
             issuer: s.issuer,
             tier: s.tier,

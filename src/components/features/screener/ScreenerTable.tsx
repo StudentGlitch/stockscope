@@ -67,29 +67,29 @@ export function ScreenerTable({
       {
         Header: "Price",
         accessor: "price",
-        Cell: ({ value }) => <span className="font-label text-sm tabular-nums text-right">{formatNum(value)}</span>
+        Cell: ({ value }: { value: any }) => <span className="font-label text-sm tabular-nums text-right">{formatNum(value)}</span>
       },
       {
         Header: "Change",
         accessor: "change",
-        Cell: ({ value }) => <div className="text-right w-full flex justify-end"><TrendBadge value={value ?? 0} /></div>
+        Cell: ({ value }: { value: any }) => <div className="text-right w-full flex justify-end"><TrendBadge value={value ?? 0} /></div>
       },
       {
         Header: "Volume",
         accessor: "volume",
-        Cell: ({ value }) => <span className="font-label text-sm tabular-nums text-right text-on-surface-variant">{value ? (value / 1000000).toFixed(1) + "M" : "-"}</span>
+        Cell: ({ value }: { value: any }) => <span className="font-label text-sm tabular-nums text-right text-on-surface-variant">{value ? (value / 1000000).toFixed(1) + "M" : "-"}</span>
       },
       {
         Header: "AI Score",
         id: "composite",
         accessor: (row) => row.scores?.composite,
-        Cell: ({ value }) => <ScoreBar score={value ?? 0} type="ai" />
+        Cell: ({ value }: { value: any }) => <ScoreBar score={value ?? 0} type="ai" />
       },
       {
         Header: "AI Tier",
         id: "aiTier",
         accessor: (row) => row.aiTier?.label,
-        Cell: ({ value }) => <TierBadge tier={value ?? "N/A"} />
+        Cell: ({ value }: { value: any }) => <TierBadge tier={value ?? "N/A"} />
       }
     ],
     [locale]

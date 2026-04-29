@@ -94,7 +94,7 @@ export const StockChartOverlay: React.FC<StockChartOverlayProps> = ({ ticker }) 
       mode: 'index',
       intersect: false,
     },
-    stacked: false,
+
     plugins: {
       title: {
         display: true,

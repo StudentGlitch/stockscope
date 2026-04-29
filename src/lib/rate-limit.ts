@@ -2,6 +2,7 @@
 // Sliding window rate limiting with Redis
 
 import { redisClient } from './redis';
+import { v4 as uuidv4 } from 'uuid';
 
 export interface RateLimitResult {
   allowed: boolean;
@@ -68,7 +69,7 @@ export async function checkRateLimit(
     }
 
     // Allow request and add to window
-    const requestId = `${now}-${Math.random().toString(36).substr(2, 9)}`;
+    const requestId = `${now}-${uuidv4()}`;
     await redisClient.zadd(rateLimitKey, now, requestId);
 
     // Set expiration on the key (cleanup)

@@ -12,10 +12,10 @@ import prisma from '@/lib/prisma';
 // =============================================================================
 
 async function isAdmin(email: string): Promise<boolean> {
-  // TODO: Add isAdmin field to User model
-  // For now, check email domain
-  return email.endsWith('@stockscope.com');
+  const user = await prisma.user.findUnique({ where: { email } });
+  return user?.isAdmin ?? false;
 }
+
 
 async function requireAdmin(req: NextRequest) {
   const session = await getServerSession(authOptions);
