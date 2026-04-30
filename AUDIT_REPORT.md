@@ -2,7 +2,7 @@
 
 ## 1. Executive Summary
 
-The Stockscope codebase is an ambitious, Next.js (App Router) based application designed for stock screening, portfolio management, and advanced analytics. It has a strong UI layer built with Tailwind CSS and numerous React components handling complex data visualization. However, the application currently suffers from significant architectural drift, excessive technical debt, and a lack of clear separation of concerns between client and server layers. Many pages are improperly marked as `"use client"` while performing data fetches or session checks, circumventing the benefits of Next.js Server Components. Additionally, the build system and test suites are currently broken due to TypeScript definition errors and misconfigured ESM/Jest integrations.
+The Stockscope codebase is an ambitious, Next.js (App Router)-based application designed for stock screening, portfolio management, and advanced analytics. It has a strong UI layer built with Tailwind CSS and numerous React components handling complex data visualization. However, the application currently suffers from significant architectural drift, excessive technical debt, and a lack of clear separation of concerns between client and server layers. Many pages are improperly marked as `"use client"` while performing data fetches or session checks, circumventing the benefits of Next.js Server Components. Additionally, the build system and test suites are currently broken due to TypeScript definition errors and misconfigured ESM/Jest integrations.
 
 Overall Health Score: **45/100**
 
@@ -34,10 +34,10 @@ Overall Health Score: **45/100**
 - **TypeScript & Build Failure:** Missing types for fundamental UI libraries.
   - *Path:* `src/components/features/screener/*`
   - *Action:* `npm i -D @types/react-slider @types/react-table @types/react-modal`
-- **Security - Unsafe ID Generation:** Cryptographically insecure ID generation is used for rate-limiting tokens and Midtrans order IDs.
-  - *Path:* `src/lib/rate-limit.ts` (line 62: `Math.random().toString(36)`) and `app/api/transactions/route.ts` (line 89).
+- **Security - Unsafe ID Generation:** Cryptographically insecure ID generation was used for rate-limiting tokens and Midtrans order IDs.
+  - *Path:* `app/api/transactions/route.ts` (line 89) for Midtrans order IDs (partially fixed, `src/lib/rate-limit.ts` now uses UUIDs).
   - *Action:* Replace `Math.random()` with `crypto.randomUUID()` or the `uuid` package.
-- **Security - Weak Admin Authorization:** Admin checks rely on a simple string suffix (`endsWith('@stockscope.com')`) rather than an explicit role/claim in the database.
+- **Security - Weak Admin Authorization:** Admin checks historically relied on an email suffix. Code now checks `user.isAdmin` but database must reliably store this flag.
   - *Path:* `app/api/transactions/route.ts` (line 153).
 - **Broken Dependency Tree:** Conflicting peer dependencies exist between `react-chartjs-2@5.3.1` (requires Chart.js v4) and `chart.js@3.9.1`.
   - *Path:* `package.json`
@@ -59,7 +59,7 @@ Overall Health Score: **45/100**
 - **N+1 Database Queries:** In `app/api/admin/billing/route.ts`, the code fetches transactions and then does a secondary bulk fetch for users, mapping them in memory. While better than a pure loop, it misses Prisma's native `include` capability, which handles the JOIN at the database level.
 - **Bcrypt Hashing on API Requests:** API keys are hashed with bcrypt. While there is a Redis cache in place (`cacheValidatedApiKey`), a cache miss requires an O(N) scan of all active API keys and a bcrypt comparison for each, which is an immediate DDoS vector.
   - *Path:* `src/lib/api-key-middleware.ts` (line 62).
-- **Synchronous Polling in Server:** A `setInterval` block inside `server.ts` performs database lookups every 15 seconds to mock an external API and trigger socket events. This locks the main Node thread and will not scale horizontally.
+- **Synchronous Polling in Server:** A `setInterval` block inside `server.ts` performs database lookups every 15 seconds to mock an external API and trigger socket events. This may lead to overlapping executions and load amplification, hindering horizontal scalability and increasing DB/API pressure.
 
 ## 7. Strategic Action Plan (Next Steps)
 

@@ -64,7 +64,8 @@ export async function POST(request: Request) {
     let state: 'CASH' | 'STOCK' = 'CASH';
     let capital = initialCapital;
     let shares = 0;
-    const trades: any[] = [];
+    interface Trade { type: "BUY" | "SELL"; date: string; price: number; value: number; signalValue: number | null; reason: string; }
+    const trades: Trade[] = [];
 
     for (let i = 0; i < facts.length; i++) {
       const sigValue = signalData[i];
@@ -80,7 +81,7 @@ export async function POST(request: Request) {
           shares = capital / price;
           capital = 0;
           state = 'STOCK';
-          trades.push({ type: 'BUY', date: dateStr, price, value: signalData[i], reason: `Signal ${sigValue.toFixed(2)} ${operator} ${threshold}` });
+          trades.push({ type: 'BUY', date: dateStr, price, value: shares * price, signalValue: signalData[i], reason: `Signal ${sigValue.toFixed(2)} ${operator} ${threshold}` });
         }
       } else if (state === 'STOCK') {
         // Simple Default Exit Condition: Reverse threshold logic
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
           capital = shares * price;
           shares = 0;
           state = 'CASH';
-          trades.push({ type: 'SELL', date: dateStr, price, value: signalData[i], reason: `Signal ${sigValue.toFixed(2)} trigger` });
+          trades.push({ type: 'SELL', date: dateStr, price, value: shares * price, signalValue: signalData[i], reason: `Signal ${sigValue.toFixed(2)} trigger` });
         }
       }
     }
@@ -109,8 +110,9 @@ export async function POST(request: Request) {
       trades
     });
 
-  } catch (error: any) {
-    console.error('Backtest error:', error);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('Backtest error:', message);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

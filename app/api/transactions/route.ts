@@ -106,7 +106,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate unique order ID for Midtrans
-    const orderId = `ORDER-${user.id.slice(-8)}-${Date.now()}-${uuidv4().slice(0, 6).toUpperCase()}`;
+    const orderId = `RTI-${user.id}-${Date.now()}`;
+    const newOrderRef = `ORDER-${user.id.slice(-8)}-${Date.now()}-${uuidv4().slice(0, 6).toUpperCase()}`;
 
     // Capture request context for audit trail
     const ipAddress = req.headers.get('x-forwarded-for') || 
@@ -129,7 +130,7 @@ export async function POST(req: NextRequest) {
         subscriptionId: body.subscriptionId || null,
         ipAddress,
         userAgent,
-        metadata: body.metadata || null,
+        metadata: { ...body.metadata, newOrderRef } || null,
       }
     });
 

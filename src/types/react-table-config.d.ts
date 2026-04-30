@@ -17,6 +17,7 @@ declare module 'react-table' {
     extends UsePaginationState<D>,
       UseSortByState<D> {}
 
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type
   export interface ColumnInstance<D extends Record<string, unknown> = Record<string, unknown>>
     extends UseSortByColumnProps<D> {}
 
