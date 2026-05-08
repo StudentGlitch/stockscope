@@ -2,9 +2,6 @@
 
 import { useCallback, useMemo } from "react";
 
-// Premium gating (uncomment when restoring tier limits):
-// import { FREE_LIMIT } from '@/lib/auth/constants';
-// import { isPremiumTab } from '@/lib/services/planService';
 import type { Plan } from "@/lib/auth/types";
 
 import { useAuth } from "./useAuth";
@@ -25,19 +22,6 @@ export function usePlan(): UsePlanReturn {
 
   const plan: Plan = useMemo(() => user?.plan ?? "free", [user?.plan]);
 
-  // --- Premium gating off: everyone treated as premium. Restore block below and remove the `true` / `Infinity` shims. ---
-  // const isPremium = useMemo(() => plan === 'premium', [plan]);
-  // const dataLimit = useMemo(
-  //   () => (isPremium ? Number.POSITIVE_INFINITY : FREE_LIMIT),
-  //   [isPremium]
-  // );
-  // const canAccessTab = useCallback(
-  //   (tabId: string): boolean => {
-  //     if (isPremium) return true;
-  //     return !isPremiumTab(tabId);
-  //   },
-  //   [isPremium]
-  // );
   const isPremium = true;
   const dataLimit = Number.POSITIVE_INFINITY;
   const canAccessTab = useCallback((tabId: string): boolean => {
